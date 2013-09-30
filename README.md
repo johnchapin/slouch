@@ -8,6 +8,21 @@ Inspired by slacker and slacker-cluster, but using standard versions of:
 - http.async.client (https://github.com/neotyk/http.async.client)
 - ring (https://github.com/ring-clojure/ring)
 
+## usage
+
+;; server
+(require '[slouch.server]
+         '[slouch.example.api]
+(def ring-app
+ (slouch.server/handler 'slouch.example.api))
+
+;; client
+(require '[slouch.client])
+(def c (client/new-client "http://localhost:3000"))
+(defn-remote c sum :remote-ns 'slouch.example.api)
+(sum 1 2 3)
+;; 6
+
 # design
 
 ## Protocol

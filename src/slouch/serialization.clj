@@ -1,19 +1,7 @@
 (ns slouch.serialization
   (:require [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
             [taoensso.nippy :as nippy])
-  (:import [java.io ByteArrayOutputStream ByteArrayInputStream]
-           [java.nio ByteBuffer]))
-
-;(let [fmtr (DateTimeFormat/forPattern "yyyy-MM-dd")]
-
-;(nippy/extend-freeze LocalDate 1
-;[^LocalDate localdate data-output-stream]
-;(.writeUTF data-output-stream (str localdate)))
-
-;(nippy/extend-thaw 1
-;[data-input-stream]
-;(.parseLocalDate fmtr (.readUTF data-input-stream))))
+  (:import [java.io ByteArrayOutputStream ByteArrayInputStream]))
 
 (nippy/extend-freeze
   Throwable 128

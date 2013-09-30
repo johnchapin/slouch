@@ -5,3 +5,11 @@
 
 (defn product [& nums]
   (apply * nums))
+
+(defn exception [& _]
+  (throw (Exception. "foo")))
+
+(defn complex [& _]
+  [{:foo :bar
+    :baz [:bing {:monkeys 123} true]}
+   "blargh"])
