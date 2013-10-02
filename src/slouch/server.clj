@@ -37,11 +37,15 @@
       {:status (:exception common/response-codes)
        :slouch {:result t}})))
 
+(defn- default-interceptor [handler]
+  (fn [request]
+    (handler request)))
+
 (defn handler [exposed-ns & {:keys [interceptors]}]
   (let [funcs (ns-funcs exposed-ns)]
     (-> handle-request
-        ((get interceptors :slouch-request identity))
+        ((get interceptors :gamma default-interceptor))
         (wrap-slouch-fn ,,, funcs)
-        ((get interceptors :slouch-fn identity))
+        ((get interceptors :beta default-interceptor))
         wrap-slouch-serial
-        ((get interceptors :serial identity)))))
+        ((get interceptors :alpha default-interceptor)))))
