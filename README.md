@@ -8,7 +8,7 @@ Heavily inspired by [slacker](http://github.com/sunng87/slacker), but using:
 - http.async.client (https://github.com/neotyk/http.async.client)
 - ring (https://github.com/ring-clojure/ring)
 
-## usage
+## Usage
 
 ```clojure
 ; server
@@ -25,10 +25,9 @@ Heavily inspired by [slacker](http://github.com/sunng87/slacker), but using:
 ; 6
 ```
 
-## interceptors
+## Interceptors
 
-Interceptors are just Ring middleware functions that are injected
-into the slouch server pipeline.
+Interceptors are just Ring middleware functions that are injected into the slouch server pipeline.
 
 For example, to record processing time for the entire pipeline:
 
@@ -47,19 +46,17 @@ For example, to record processing time for the entire pipeline:
     'slouch.example.api :interceptors {:alpha wrap-processing-time}))
 ```
 
-There are three injection points for interceptors in the slouch
-server pipeline.
+There are three injection points for interceptors in the slouch server pipeline.
 
-:alpha - wraps the entire pipeline
-:beta  - after deserialization of the incoming request body,
-         before serialization of the outgoing response body
-:gamma - after looking up the slouch function name in the
-         incoming request URI, before function execution.
+*:alpha* - wraps the entire pipeline
+
+*:beta*  - after deserialization of the incoming request body, before serialization of the outgoing response body
+
+*:gamma* - after looking up the slouch function name in the incoming request URI, before function execution.
 
 See the [Ring documentation](https://github.com/ring-clojure/ring/wiki/Concepts) to learn more about middleware.
 
-Use clojure.core/comp to compose multiple interceptors for
-injection at a single point.
+Use [clojure.core/comp](http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/comp) to compose multiple interceptors for injection at a single point.
 
 ## License
 
