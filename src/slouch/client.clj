@@ -1,23 +1,16 @@
 (ns slouch.client
-  (:require [http.async.client :as http]
-            [slouch.common :as common]
+  (:require [slouch.common :as common]
             [slouch.serialization :as serial]))
 
-(defn- handle-cookies
-  [{headers :headers :as response} cookies]
-  (when (contains? headers :set-cookie)
-    (reset! cookies (http/cookies response)))
-  response)
-
 (defn- handle-response
-  [{{code :code} :status body :body :as response}]
+  [[code body]]
   (let [result (serial/deserialize body)]
     (condp = code
       (:success common/response-codes)
       result
 
       (:not-found common/response-codes)
-      (throw (Exception. "Function '%s' not found" result))
+      (throw (Exception. (format "Function '%s' not found" result)))
 
       (:exception common/response-codes)
       (throw result))))
@@ -26,23 +19,19 @@
   (invoke [this ns-name fn-name args])
   (close [this]))
 
-(deftype SlouchClient [http-client cookies conn-str]
+(deftype SlouchClient [http-client conn-str]
   SlouchClientProtocol
   (invoke [this ns-name fn-name args]
-    (let [url (str conn-str "/" ns-name "/" fn-name)
+    (let [uri (str ns-name "/" fn-name)
+          url (str conn-str "/" uri)
           body (serial/serialize args)]
-      (-> (http/POST http-client url :body body :cookies @cookies)
-          http/await
-          (update-in ,,, [:status] deref)
-          (update-in ,,, [:headers] deref)
-          (update-in ,,, [:body] deref)
-          (handle-cookies ,,, cookies)
+      (-> (.send http-client url body)
           handle-response)))
   (close [this]
-    (http/close http-client)))
+    (.close http-client)))
 
-(defn new-client [conn-str]
-  (SlouchClient. (http/create-client) (atom '()) conn-str))
+(defn new-client [http-client conn-str]
+  (SlouchClient. http-client conn-str))
 
 (defmacro defn-remote
   [client fn-name & {:keys [remote-ns remote-name]
