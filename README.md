@@ -18,8 +18,11 @@ Heavily inspired by [slacker](http://github.com/sunng87/slacker), but using:
  (slouch.server/handler 'slouch.example.api))
 
 ; client
-(require '[slouch.client])
-(def c (slouch.client/new-client "http://localhost:3000"))
+(require '[slouch.client]
+         '[slouch.client.http.default])
+(def c (slouch.client/new-client
+         (slouch.client.http.default/new-http-client)
+         "http://localhost:3000"))
 (defn-remote c sum :remote-ns 'slouch.example.api)
 (sum 1 2 3)
 ; 6
