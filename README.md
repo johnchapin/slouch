@@ -8,24 +8,24 @@ Heavily inspired by [slacker](http://github.com/sunng87/slacker), but using:
 - http.async.client (https://github.com/neotyk/http.async.client)
 - ring (https://github.com/ring-clojure/ring)
 
-## Usage
+## Demo
 
-```clojure
-; server
-(require '[slouch.server]
-         '[slouch.example.api])
-(def ring-app
- (slouch.server/handler 'slouch.example.api))
+Start the server:
+```shell
+$ lein ring server-headless
+...
+Started server on port 3000
+```
 
-; client
-(require '[slouch.client]
-         '[slouch.client.http.default])
-(def c (slouch.client/new-client
-         (slouch.client.http.default/new-http-client)
-         "http://localhost:3000"))
-(defn-remote c sum :remote-ns 'slouch.example.api)
-(sum 1 2 3)
-; 6
+In a new terminal, exercise the client:
+```shell
+$ lein repl
+...
+user=> (use 'example.client)
+user=> (product 1 2 3 4)
+24
+user=> (meta (stats-meta 1 2 3 4))
+{:mean 5/2, :median 5/2, :mode 4}
 ```
 
 ## Interceptors
