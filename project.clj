@@ -13,5 +13,9 @@
                  [com.taoensso/nippy "2.1.0"]
                  [http.async.client "0.5.2"]]
 
+  :profiles {:dev {:source-paths ["example/src"]
+                   :plugins [[lein-ring "0.8.7"]]
+                   :ring {:handler example.server/app}}}
+
   :repositories {"releases"  {:url "s3p://rk-maven/releases/"}
                  "snapshots" {:url "s3p://rk-maven/snapshots/"}})
