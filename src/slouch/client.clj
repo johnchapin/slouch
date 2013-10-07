@@ -1,5 +1,6 @@
 (ns slouch.client
   (:require [slouch.common :as common]
+            [slouch.client.http :as http]
             [slouch.serialization :as serial]))
 
 (defn- handle-response
@@ -30,7 +31,8 @@
   (close [this]
     (.close http-client)))
 
-(defn new-client [http-client conn-str]
+(defn new-client [conn-str & {:keys [http-client]
+                              :or {http-client (http/new-client)}}]
   (SlouchClient. http-client conn-str))
 
 (defmacro defn-remote
