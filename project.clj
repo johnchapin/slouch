@@ -15,6 +15,7 @@
 
   :profiles {:dev {:source-paths ["example/src"]
                    :plugins [[lein-ring "0.8.7"]]
+                   :dependencies [[midje "1.5.1"]]
                    :ring {:handler example.server/app}}}
 
   :repositories {"releases"  {:url "s3p://rk-maven/releases/"}
