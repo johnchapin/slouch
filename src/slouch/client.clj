@@ -3,31 +3,33 @@
             [slouch.client.http :as http]
             [slouch.serialization :as serial]))
 
-(defn- handle-response
+(defn- handle-result
   [[code body]]
-  (let [result (serial/deserialize body)]
+  (let [return (serial/deserialize body)]
     (condp = code
       (:success common/response-codes)
-      result
+      return
 
       (:not-found common/response-codes)
-      (throw (Exception. (format "Function '%s' not found" result)))
+      (throw (Exception. (format "Function '%s' not found" return)))
 
       (:exception common/response-codes)
-      (throw result))))
+      (throw return))))
 
 (defprotocol SlouchClientProtocol
-  (invoke [this ns-name fn-name args])
+  (invoke [this ns-name fn-name async args])
   (close [this]))
 
 (deftype SlouchClient [http-client conn-str]
   SlouchClientProtocol
-  (invoke [this ns-name fn-name args]
+  (invoke [this ns-name fn-name async args]
     (let [uri (str ns-name "/" fn-name)
           url (str conn-str "/" uri)
           body (serial/serialize args)]
-      (-> (.send http-client url body)
-          handle-response)))
+      (if async
+        (.send-async http-client url body handle-result)
+        (-> (.send http-client url body)
+            handle-result))))
   (close [this]
     (.close http-client)))
 
@@ -36,10 +38,12 @@
   (SlouchClient. http-client conn-str))
 
 (defmacro defn-remote
-  [client fn-name & {:keys [remote-ns remote-name]
-                     :or {remote-ns (ns-name *ns*)}}]
+  [client fn-name & {:keys [remote-ns remote-name async]
+                     :or {remote-ns (ns-name *ns*)
+                          async false}}]
   (let [facade-sym (symbol fn-name)
         remote-name (or remote-name (str fn-name))]
     `(def ~facade-sym
        (fn [& args#]
-         (invoke ~client ~remote-ns ~remote-name args#)))))
+         (prn "async:" ~async)
+         (invoke ~client ~remote-ns ~remote-name ~async args#)))))
