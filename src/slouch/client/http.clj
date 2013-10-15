@@ -14,6 +14,9 @@
 
 (defprotocol HttpClient
   (send [this url body])
+  (close [this]))
+
+(defprotocol AsyncHttpClient
   (send-async [this url body response-fn])
   (close [this]))
 
@@ -23,15 +26,16 @@
     (-> (http.async.client/POST client url :body body)
         http.async.client/await
         response->result))
+  (close [this]
+    (http.async.client/close client))
+  slouch.client.http/AsyncHttpClient
   (send-async [this url body result-fn]
     (let [request (http.async.client.request/prepare-request :post url :body body)
           result (promise)]
       (http.async.client.request/execute-request
         client request
         :completed #(deliver result (delay (result-fn (response->result %)))))
-      result))
-  (close [this]
-    (http.async.client/close client)))
+      result)))
 
 (defn new-client []
   (DefaultHttpClient. (http.async.client/create-client)))

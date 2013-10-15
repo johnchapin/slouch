@@ -45,5 +45,4 @@
         remote-name (or remote-name (str fn-name))]
     `(def ~facade-sym
        (fn [& args#]
-         (prn "async:" ~async)
          (invoke ~client ~remote-ns ~remote-name ~async args#)))))
