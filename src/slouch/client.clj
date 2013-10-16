@@ -37,7 +37,7 @@
   (.close http-client))
 
 (defn new [conn-str & {:keys [http-client]
-                       :or {http-client (http/new-client)}}]
+                       :or {http-client (http/new)}}]
   {:pre [(instance? HttpClient http-client)]}
   (SlouchClient. http-client conn-str))
 
