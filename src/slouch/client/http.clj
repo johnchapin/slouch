@@ -8,9 +8,11 @@
       (update-in ,,, [:body] deref)))
 
 (defn- response->result [response]
-  (let [response* (realize-response response)]
-    [(get-in response* [:status :code])
-     (get-in response* [:body])]))
+  (if (http.async.client/failed? response)
+    (throw (RuntimeException. (http.async.client/error response)))
+    (let [response* (realize-response response)]
+      [(get-in response* [:status :code])
+       (get-in response* [:body])])))
 
 (defprotocol HttpClient
   (send [this url body])
@@ -34,7 +36,12 @@
           result (promise)]
       (http.async.client.request/execute-request
         client request
-        :completed #(deliver result (delay (result-fn (response->result %)))))
+        :completed (fn [r]
+                     (deliver result (delay (result-fn (response->result r)))))
+        :error (fn [_ t]
+                 ;; Using a future here because throwing exceptions from delays
+                 ;;  is broken: http://dev.clojure.org/jira/browse/CLJ-1175
+                 (deliver result (future (throw t)))))
       result)))
 
 (defn new-client []
