@@ -1,10 +1,15 @@
 (ns slouch.client
+  (:refer-clojure :exclude [new])
   (:require [slouch.common :as common]
             [slouch.client.http :as http]
-            [slouch.serialization :as serial]))
+            [slouch.serialization :as serial])
+  (:import [slouch.client.http HttpClient]))
+
+(defrecord SlouchClient [http-client conn-str])
 
 (defn- handle-result
-  [[code body]]
+  [code body]
+  {:pre [(number? code) body]}
   (let [return (serial/deserialize body)]
     (condp = code
       (:success common/response-codes)
@@ -16,25 +21,24 @@
       (:exception common/response-codes)
       (throw return))))
 
-(defprotocol SlouchClientProtocol
-  (invoke [this ns-name fn-name async args])
-  (close [this]))
+(defn invoke [{:keys [http-client conn-str]}
+              ns-name fn-name async args]
+  (let [uri (str ns-name "/" fn-name)
+        url (str conn-str "/" uri)
+        handler #(->> (serial/serialize args)
+                      (.send http-client url ,,,)
+                      (.collect http-client ,,,)
+                      (apply handle-result ,,,))]
+    (if async
+      (future (handler))
+      (handler))))
 
-(deftype SlouchClient [http-client conn-str]
-  SlouchClientProtocol
-  (invoke [this ns-name fn-name async args]
-    (let [uri (str ns-name "/" fn-name)
-          url (str conn-str "/" uri)
-          body (serial/serialize args)]
-      (if async
-        (.send-async http-client url body handle-result)
-        (-> (.send http-client url body)
-            handle-result))))
-  (close [this]
-    (.close http-client)))
+(defn close [{:keys [http-client]}]
+  (.close http-client))
 
-(defn new-client [conn-str & {:keys [http-client]
-                              :or {http-client (http/new-client)}}]
+(defn new [conn-str & {:keys [http-client]
+                       :or {http-client (http/new-client)}}]
+  {:pre [(instance? HttpClient http-client)]}
   (SlouchClient. http-client conn-str))
 
 (defmacro defn-remote
@@ -44,5 +48,11 @@
   (let [facade-sym (symbol fn-name)
         remote-name (or remote-name (str fn-name))]
     `(def ~facade-sym
-       (fn [& args#]
-         (invoke ~client ~remote-ns ~remote-name ~async args#)))))
+       (with-meta
+         (fn [& args#]
+           (invoke ~client ~remote-ns ~remote-name ~async args#))
+         {:client ~client
+          :remote-ns ~remote-ns
+          :remote-name ~remote-name
+          :async ~async
+          }))))

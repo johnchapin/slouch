@@ -1,6 +1,13 @@
 (ns slouch.client.http
-  (:refer-clojure :exclude [send])
-  (:require [http.async.client]))
+  (:refer-clojure :exclude [new send])
+  (:require [http.async.client :as httpa]))
+
+(defprotocol HttpClient
+  (send [this url body])
+  (collect [this response])
+  (close [this]))
+
+;; DefaultHttpClient implementation
 
 (defn- realize-response [response]
   (-> response
@@ -8,41 +15,21 @@
       (update-in ,,, [:body] deref)))
 
 (defn- response->result [response]
-  (if (http.async.client/failed? response)
-    (throw (RuntimeException. (http.async.client/error response)))
-    (let [response* (realize-response response)]
-      [(get-in response* [:status :code])
-       (get-in response* [:body])])))
-
-(defprotocol HttpClient
-  (send [this url body])
-  (close [this]))
-
-(defprotocol AsyncHttpClient
-  (send-async [this url body response-fn])
-  (close [this]))
+  (let [response* (realize-response response)]
+    [(get-in response* [:status :code])
+     (get-in response* [:body])]))
 
 (deftype DefaultHttpClient [client]
-  slouch.client.http/HttpClient
+  HttpClient
   (send [this url body]
-    (-> (http.async.client/POST client url :body body)
-        http.async.client/await
-        response->result))
+    (httpa/POST client url :body body))
+  (collect [this response]
+    (httpa/await response)
+    (if (httpa/failed? response)
+      (throw (RuntimeException. (httpa/error response)))
+      (response->result response)))
   (close [this]
-    (http.async.client/close client))
-  slouch.client.http/AsyncHttpClient
-  (send-async [this url body result-fn]
-    (let [request (http.async.client.request/prepare-request :post url :body body)
-          result (promise)]
-      (http.async.client.request/execute-request
-        client request
-        :completed (fn [r]
-                     (deliver result (delay (result-fn (response->result r)))))
-        :error (fn [_ t]
-                 ;; Using a future here because throwing exceptions from delays
-                 ;;  is broken: http://dev.clojure.org/jira/browse/CLJ-1175
-                 (deliver result (future (throw t)))))
-      result)))
+    (httpa/close client)))
 
-(defn new-client []
-  (DefaultHttpClient. (http.async.client/create-client)))
+(defn new []
+  (DefaultHttpClient. (httpa/create-client)))
