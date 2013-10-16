@@ -61,6 +61,20 @@ See the [Ring documentation](https://github.com/ring-clojure/ring/wiki/Concepts)
 
 Use [clojure.core/comp](http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/comp) to compose multiple interceptors for injection at a single point.
 
+## Custom HTTP Clients
+
+Slouch ships with [http.async.client](https://github.com/neotyk/http.async.client), but supports custom HTTP clients adhering to the HttpClient or AsyncHttpClient protocols defined in [slouch.client.http](https://github.com/g1nn13/slouch/tree/master/src/slouch/client/http.clj).
+
+See the [DefaultHttpClient](https://github.com/g1nn13/slouch/master/src/slouch/client/http.clj] for an example implementation.
+
+For asynchronous calls, a custom HTTP client can change the semantics of accessing return values. The DefaultHttpClient uses a promise/delay combination, so requires a double dereference of the return value.
+
+## Error Handling
+
+User exceptions and "function not found" exceptions are thrown from slouch.client/handle-result.
+
+Transport exceptions should be thrown from the HttpClient/send method, or from the promise/future/delay/whatever returned by AsyncHttpClient/send-async.
+
 ## License
 
 Copyright © 2013 Roomkey
