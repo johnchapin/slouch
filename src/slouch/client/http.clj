@@ -19,10 +19,11 @@
     [(get-in response* [:status :code])
      (get-in response* [:body])]))
 
-(deftype DefaultHttpClient [client]
+(deftype DefaultHttpClient [client conn-str]
   HttpClient
-  (send [this url body]
-    (httpa/POST client url :body body))
+  (send [this uri body]
+    (let [url (str conn-str "/" uri)]
+      (httpa/POST client url :body body)))
   (collect [this response]
     (httpa/await response)
     (if (httpa/failed? response)
@@ -31,5 +32,5 @@
   (close [this]
     (httpa/close client)))
 
-(defn new []
-  (DefaultHttpClient. (httpa/create-client)))
+(defn new [conn-str]
+  (DefaultHttpClient. (httpa/create-client) conn-str))

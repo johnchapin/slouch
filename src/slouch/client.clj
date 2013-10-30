@@ -5,7 +5,7 @@
             [slouch.serialization :as serial])
   (:import [slouch.client.http HttpClient]))
 
-(defrecord SlouchClient [http-client conn-str])
+(defrecord SlouchClient [http-client])
 
 (defn- handle-result
   [code body]
@@ -21,12 +21,11 @@
       (:exception common/response-codes)
       (throw return))))
 
-(defn invoke [{:keys [http-client conn-str]}
+(defn invoke [{:keys [http-client]}
               ns-name fn-name async args]
   (let [uri (str ns-name "/" fn-name)
-        url (str conn-str "/" uri)
         handler #(->> (serial/serialize args)
-                      (.send http-client url ,,,)
+                      (.send http-client uri ,,,)
                       (.collect http-client ,,,)
                       (apply handle-result ,,,))]
     (if async
@@ -36,10 +35,11 @@
 (defn close [{:keys [http-client]}]
   (.close http-client))
 
-(defn new [conn-str & {:keys [http-client]
-                       :or {http-client (http/new)}}]
-  {:pre [(instance? HttpClient http-client)]}
-  (SlouchClient. http-client conn-str))
+(defmulti new class)
+(defmethod new HttpClient [http-client]
+  (SlouchClient. http-client))
+(defmethod new String [conn-str]
+  (SlouchClient. (http/new conn-str)))
 
 (defmacro defn-remote
   [client fn-name & {:keys [remote-ns remote-name async]
