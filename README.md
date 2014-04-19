@@ -5,7 +5,7 @@ Simple Clojure RPC over HTTP
 Heavily inspired by [slacker](http://github.com/sunng87/slacker), but using:
 
 - nippy (https://github.com/ptaoussanis/nippy)
-- http.async.client (https://github.com/neotyk/http.async.client)
+- httpkit (https://github.com/http-kit/http-kit)
 - ring (https://github.com/ring-clojure/ring)
 
 ## Demo

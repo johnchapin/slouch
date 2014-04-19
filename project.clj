@@ -11,7 +11,7 @@
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [com.taoensso/nippy "2.1.0"]
-                 [http.async.client "0.5.2"]]
+                 [http-kit "2.1.16"]]
 
   :profiles {:dev {:source-paths ["example/src"]
                    :plugins [[lein-ring "0.8.7"]]
