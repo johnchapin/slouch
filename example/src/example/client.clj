@@ -5,3 +5,4 @@
 
 (slouch.client/defn-remote slouch-client product :remote-ns "example.api")
 (slouch.client/defn-remote slouch-client stats-meta :remote-ns "example.api")
+(slouch.client/defn-remote slouch-client blow-up :remote-ns "example.api")

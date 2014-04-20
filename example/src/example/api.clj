@@ -32,3 +32,6 @@
     {:mean (mean nums)
      :median (median nums)
      :mode (mode nums)}))
+
+(defn blow-up []
+  (throw (RuntimeException. "Kaboom")))
