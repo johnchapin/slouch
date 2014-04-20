@@ -13,7 +13,7 @@
   HttpClient
   (send [this uri body]
     (let [url (str conn-str "/" uri)]
-      (http/post url {:body body})))
+      (http/post url {:body body :as :stream})))
   (collect [this response]
     ;; TODO: Deref w/ timeout instead?
     (let [{:keys [status headers body error]} @response]
